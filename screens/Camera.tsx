@@ -2,10 +2,15 @@ import React, { useState, useEffect } from 'react';
 import { StyleSheet, Text, View, TouchableOpacity, Platform } from 'react-native';
 import { Camera } from 'expo-camera';
 import { Ionicons } from '@expo/vector-icons';
+import { Video, AVPlaybackStatus } from 'expo-av';
 
 export default function CameraScreen() {
   const [hasPermission, setHasPermission] = useState(null);
   const [type, setType] = useState(Camera.Constants.Type.front);
+  const [vid, _vid] = useState();
+  const [showVideo, _showVideo] = useState(false);
+  const [showLoading, _showLoading] = useState(true);
+  const videoRef = React.useRef(null);
 
   useEffect(() => {
     (async () => {
@@ -16,17 +21,26 @@ export default function CameraScreen() {
 
     setTimeout(()=>{
       startRec();
-    },2000)
+    },1000)
   }, []);
 
 
   async function startRec(){
     if (this.camera) {
-     let video = this.camera.recordAsync();
-      setTimeout(()=>{
-        this.camera.stopRecording();
-        console.log( video )
-      },5000)
+      _showLoading(false);
+     const video = await this.camera.recordAsync({
+      VideoQuality:['1080p'],
+      maxDuration:5,
+      mute:false,
+      videoBitrate:5000000
+    });
+    
+    _vid(video.uri);
+    console.log("Video Done");
+    console.log(video.uri);
+        _showVideo(true);
+ 
+ 
     }
   };
 
@@ -38,8 +52,14 @@ export default function CameraScreen() {
   }
   return (
     <View style={styles.container}>
+      {showVideo != true ? (
+        <>
+    
       <Camera  ref={ref => {
-    this.camera = ref;
+
+            this.camera = ref;
+
+  
   }} style={styles.camera} type={type}>
         <View style={styles.buttonContainer}>
           <TouchableOpacity
@@ -55,9 +75,27 @@ export default function CameraScreen() {
            <Ionicons  style={styles.text} icon={ Platform.OS === 'ios' ? "ios-reverse-camera" : 'md-reverse-camera'} size={40} color="white" />
            <Text style={styles.text}> Flip</Text>
           </TouchableOpacity>
+          {showLoading ? (
+          <Text>Loading</Text>
+          ): null}
         </View>
       </Camera>
-    </View>
+      </>
+      ):(
+        <>
+        <Video
+          ref={videoRef}
+          style={styles.camera}
+          source={{
+            uri: vid,
+          }}
+          resizeMode="cover"
+          isLooping
+          shouldPlay
+        />
+   </>
+      )}
+    </View>  
   );
 }
 
