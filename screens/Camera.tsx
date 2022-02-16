@@ -13,7 +13,22 @@ export default function CameraScreen() {
       setHasPermission(status === 'granted');
       
     })();
+
+    setTimeout(()=>{
+      startRec();
+    },2000)
   }, []);
+
+
+  async function startRec(){
+    if (this.camera) {
+     let video = this.camera.recordAsync();
+      setTimeout(()=>{
+        this.camera.stopRecording();
+        console.log( video )
+      },5000)
+    }
+  };
 
   if (hasPermission === null) {
     return <View />;
@@ -23,7 +38,9 @@ export default function CameraScreen() {
   }
   return (
     <View style={styles.container}>
-      <Camera style={styles.camera} type={type}>
+      <Camera  ref={ref => {
+    this.camera = ref;
+  }} style={styles.camera} type={type}>
         <View style={styles.buttonContainer}>
           <TouchableOpacity
             style={styles.button}
